@@ -1,0 +1,142 @@
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
+import { ChevronDown, Store, Check, Crown, ShieldCheck, User } from 'lucide-react'
+
+interface Restaurante {
+  id: string
+  nombre: string
+  slug: string
+  estado_suscripcion: string
+  rol: string
+}
+
+const rolIcons: Record<string, React.ReactNode> = {
+  'dueño':      <Crown size={11} />,
+  'supervisor': <ShieldCheck size={11} />,
+  'empleado':   <User size={11} />,
+}
+
+const rolColors: Record<string, string> = {
+  'dueño':      'var(--gold-light)',
+  'supervisor': 'var(--red-light)',
+  'empleado':   'var(--text-2)',
+}
+
+export function BranchSelector() {
+  const [open, setOpen] = useState(false)
+  const [restaurantes, setRestaurantes] = useState<Restaurante[]>([])
+  const [current, setCurrent] = useState<Restaurante | null>(null)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => r.json())
+      .then(({ data }) => {
+        if (!data?.accesos) return
+        const list: Restaurante[] = data.accesos.map((a: { restaurantes: Omit<Restaurante, 'rol'>; rol: string }) => ({
+          ...a.restaurantes, rol: a.rol,
+        }))
+        setRestaurantes(list)
+        const saved = localStorage.getItem('rg_sucursal')
+        const found = list.find(r => r.id === saved) ?? list[0]
+        if (found) setCurrent(found)
+      })
+      .catch(() => null)
+  }, [])
+
+  // Close on click outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const select = (r: Restaurante) => {
+    setCurrent(r)
+    localStorage.setItem('rg_sucursal', r.id)
+    setOpen(false)
+  }
+
+  if (!current) return null
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      {/* Trigger */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: '0.5rem',
+          background: open ? 'var(--surface-2)' : 'var(--surface-1)',
+          border: `1px solid ${open ? 'var(--red-border)' : 'var(--border)'}`,
+          borderRadius: 'var(--r-md)', padding: '0.45rem 0.75rem',
+          color: 'var(--text-1)', cursor: 'pointer', transition: 'all var(--t-base)',
+          minWidth: 200,
+        }}
+      >
+        <div style={{
+          width: 28, height: 28, borderRadius: 'var(--r-xs)',
+          background: 'var(--red-glow)', border: '1px solid var(--red-border)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}>
+          <Store size={13} style={{ color: 'var(--red-light)' }} />
+        </div>
+        <div style={{ flex: 1, textAlign: 'left' }}>
+          <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-1)', lineHeight: 1.2 }}>
+            {current.nombre}
+          </p>
+          <p style={{ fontSize: '0.65rem', color: rolColors[current.rol] ?? 'var(--text-3)', display: 'flex', alignItems: 'center', gap: 3 }}>
+            {rolIcons[current.rol]}
+            {current.rol}
+          </p>
+        </div>
+        <ChevronDown size={14} style={{ color: 'var(--text-3)', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform var(--t-base)', flexShrink: 0 }} />
+      </button>
+
+      {/* Dropdown */}
+      {open && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 8px)', left: 0,
+          background: 'var(--surface-1)', border: '1px solid var(--border)',
+          borderRadius: 'var(--r-md)', boxShadow: 'var(--shadow-lg)',
+          minWidth: 240, zIndex: 200, overflow: 'hidden',
+          animation: 'fadeUp 0.18s var(--ease) both',
+        }}>
+          <p style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-3)', letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.6rem 0.75rem 0.4rem' }}>
+            Mis sucursales
+          </p>
+          {restaurantes.map(r => (
+            <button key={r.id} onClick={() => select(r)} style={{
+              display: 'flex', alignItems: 'center', gap: '0.6rem',
+              width: '100%', padding: '0.55rem 0.75rem',
+              background: r.id === current.id ? 'var(--red-glow)' : 'transparent',
+              border: 'none', cursor: 'pointer', textAlign: 'left',
+              transition: 'background var(--t-fast)',
+            }}
+              onMouseEnter={e => { if (r.id !== current.id) (e.currentTarget as HTMLElement).style.background = 'var(--surface-2)' }}
+              onMouseLeave={e => { if (r.id !== current.id) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+            >
+              <div style={{
+                width: 30, height: 30, borderRadius: 'var(--r-xs)',
+                background: r.id === current.id ? 'var(--red-glow)' : 'var(--surface-3)',
+                border: `1px solid ${r.id === current.id ? 'var(--red-border)' : 'var(--border)'}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <Store size={12} style={{ color: r.id === current.id ? 'var(--red-light)' : 'var(--text-3)' }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: '0.825rem', fontWeight: 500, color: r.id === current.id ? 'var(--red-light)' : 'var(--text-1)', lineHeight: 1.2 }}>
+                  {r.nombre}
+                </p>
+                <p style={{ fontSize: '0.65rem', color: rolColors[r.rol] ?? 'var(--text-3)', display: 'flex', alignItems: 'center', gap: 3 }}>
+                  {rolIcons[r.rol]}{r.rol}
+                </p>
+              </div>
+              {r.id === current.id && <Check size={14} style={{ color: 'var(--red-light)', flexShrink: 0 }} />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
