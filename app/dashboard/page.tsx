@@ -63,16 +63,13 @@ export default function DashboardPage() {
             { label: 'Reserva',      href: '/dashboard/reservas',   emoji: '📅' },
             { label: 'Producto',     href: '/dashboard/productos',  emoji: '📦' },
           ].map(({ label, href, emoji }) => (
-            <a key={href} href={href} style={{
+            <a key={href} href={href} className="quick-link" style={{
               display: 'flex', alignItems: 'center', gap: '0.6rem',
               background: 'var(--surface-2)', border: '1px solid var(--border)',
               borderRadius: 'var(--r-sm)', padding: '0.65rem 0.875rem',
               color: 'var(--text-2)', fontSize: '0.85rem', fontWeight: 500,
               textDecoration: 'none', transition: 'all var(--t-base)',
-            }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--red-border)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-1)' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-2)' }}
-            >
+            }}>
               <span style={{ fontSize: '1.1rem' }}>{emoji}</span>
               {label}
             </a>

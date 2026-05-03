@@ -10,6 +10,7 @@ export const RegisterSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'Mínimo 6 caracteres'),
   nombre: z.string().min(2, 'Nombre muy corto'),
+  restauranteNombre: z.string().min(2, 'Nombre de restaurante requerido').optional(),
 })
 
 // ─── Restaurantes ───────────────────────────────────────────────────────────

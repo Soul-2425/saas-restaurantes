@@ -235,3 +235,6 @@ input:focus, textarea:focus, select:focus {
 
 .animate-fade-up { animation: fadeUp 0.4s var(--ease) both; }
 .animate-fade-in { animation: fadeIn 0.3s var(--ease) both; }
+
+.quick-link { border-color: var(--border); color: var(--text-2); transition: all var(--t-base); }
+.quick-link:hover { border-color: var(--red-border) !important; color: var(--text-1) !important; }

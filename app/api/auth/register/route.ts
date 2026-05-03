@@ -7,7 +7,7 @@ import { ZodError } from 'zod'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, password, nombre } = RegisterSchema.parse(body)
+    const { email, password, nombre, restauranteNombre } = RegisterSchema.parse(body)
 
     const supabase = await createClient()
     const { data, error } = await supabase.auth.signUp({ email, password })
@@ -23,9 +23,41 @@ export async function POST(request: NextRequest) {
 
     if (insertError) return apiError(insertError.message, 500)
 
+    let restauranteInfo = null
+
+    // Si se proporcionó el nombre del restaurante, crear el Tenant y asociarlo
+    if (restauranteNombre) {
+      const slug = restauranteNombre.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
+      
+      const { data: restaurante, error: rError } = await adminClient
+        .from('restaurantes')
+        .insert({ nombre: restauranteNombre, slug })
+        .select('id')
+        .single()
+        
+      if (rError) {
+        // Log the error but don't fail user creation, they can create tenant later if needed
+        console.error('Error al crear restaurante:', rError.message)
+      } else if (restaurante) {
+        // Crear el vínculo como Dueño
+        await adminClient
+          .from('usuarios_restaurantes')
+          .insert({
+            usuario_id: data.user.id,
+            restaurante_id: restaurante.id,
+            rol: 'dueño'
+          })
+          
+        restauranteInfo = restaurante
+      }
+    }
+
     return apiSuccess(
-      { user: { id: data.user.id, email, nombre } },
-      { message: 'Revisa tu email para confirmar la cuenta.' },
+      { 
+        user: { id: data.user.id, email, nombre },
+        restaurante_id: restauranteInfo?.id || null 
+      },
+      { message: 'Cuenta creada exitosamente.' },
       201
     )
   } catch (err) {
