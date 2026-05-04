@@ -51,11 +51,11 @@ export default function PedidosPage() {
           if (unsub) unsub()
           unsub = subscribePedidosActivos(rId, {
             onInsert: (payload) => {
-              const p = payload.new as Pedido
+              const p = payload.new as unknown as Pedido
               if (p.estado !== 'pagado') setPedidos(prev => [p, ...prev])
             },
             onUpdate: (payload) => {
-              const p = payload.new as Pedido
+              const p = payload.new as unknown as Pedido
               setPedidos(prev => {
                 if (p.estado === 'pagado') return prev.filter(item => item.id !== p.id)
                 const exists = prev.find(item => item.id === p.id)
@@ -64,7 +64,7 @@ export default function PedidosPage() {
               })
             },
             onDelete: (payload) => {
-              const oldP = payload.old as Partial<Pedido>
+              const oldP = payload.old as unknown as Partial<Pedido>
               setPedidos(prev => prev.filter(p => p.id !== oldP.id))
             }
           })

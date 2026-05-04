@@ -48,9 +48,9 @@ export default function MesasPage() {
           if (unsub) unsub()
           unsub = subscribeMesas(rId, (payload) => {
             setMesas(prev => {
-              if (payload.eventType === 'INSERT') return [...prev, payload.new as Mesa]
-              if (payload.eventType === 'DELETE') return prev.filter(m => m.id !== payload.old.id)
-              const updated = payload.new as Mesa
+              if (payload.eventType === 'INSERT') return [...prev, payload.new as unknown as Mesa]
+              if (payload.eventType === 'DELETE') return prev.filter(m => m.id !== (payload.old as unknown as Mesa).id)
+              const updated = payload.new as unknown as Mesa
               return prev.map(m => m.id === updated.id ? updated : m)
             })
           })
