@@ -24,55 +24,63 @@ export default function PedidosPage() {
   const [selectedPedido, setSelectedPedido] = useState<Pedido | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // 1. Get current tenant and fetch active orders
+  // Load tenant and data
   useEffect(() => {
-    const rId = localStorage.getItem('rg_sucursal')
-    if (!rId) {
-      setError('No hay sucursal seleccionada. Por favor selecciona una en el menú superior.')
-      setLoading(false)
-      return
-    }
-    setRestauranteId(rId)
+    let unsub: (() => void) | undefined
 
-    fetch(`/api/pedidos?restaurante_id=${rId}`)
-      .then(r => r.json())
-      .then(res => {
-        if (res.error) throw new Error(res.error)
-        const allPedidos = res.data || []
-        // Filter active orders for the tenant
-        const active = allPedidos.filter((p: Pedido) => p.restaurante_id === rId && p.estado !== 'pagado')
-        setPedidos(active)
-      })
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false))
-  }, [])
-
-  // 2. Setup Realtime subscription for active orders
-  useEffect(() => {
-    if (!restauranteId) return
-
-    const unsub = subscribePedidosActivos(restauranteId, {
-      onInsert: (payload) => {
-        const p = payload.new as Pedido
-        if (p.estado !== 'pagado') setPedidos(prev => [p, ...prev])
-      },
-      onUpdate: (payload) => {
-        const p = payload.new as Pedido
-        setPedidos(prev => {
-          if (p.estado === 'pagado') return prev.filter(item => item.id !== p.id)
-          const exists = prev.find(item => item.id === p.id)
-          if (exists) return prev.map(item => item.id === p.id ? p : item)
-          return [p, ...prev] // If it wasn't there but now is active (rare but possible)
-        })
-      },
-      onDelete: (payload) => {
-        const oldP = payload.old as Partial<Pedido>
-        setPedidos(prev => prev.filter(p => p.id !== oldP.id))
+    const loadData = () => {
+      const rId = localStorage.getItem('rg_sucursal')
+      if (!rId) {
+        setError('No hay sucursal seleccionada. Por favor selecciona una en el menú superior.')
+        setLoading(false)
+        return
       }
-    })
+      
+      setError('')
+      setLoading(true)
+      setRestauranteId(rId)
 
-    return () => { unsub() }
-  }, [restauranteId])
+      fetch(`/api/pedidos?restaurante_id=${rId}`)
+        .then(r => r.json())
+        .then(res => {
+          if (res.error) throw new Error(res.error)
+          const allPedidos = res.data || []
+          const active = allPedidos.filter((p: Pedido) => p.restaurante_id === rId && p.estado !== 'pagado')
+          setPedidos(active)
+
+          if (unsub) unsub()
+          unsub = subscribePedidosActivos(rId, {
+            onInsert: (payload) => {
+              const p = payload.new as Pedido
+              if (p.estado !== 'pagado') setPedidos(prev => [p, ...prev])
+            },
+            onUpdate: (payload) => {
+              const p = payload.new as Pedido
+              setPedidos(prev => {
+                if (p.estado === 'pagado') return prev.filter(item => item.id !== p.id)
+                const exists = prev.find(item => item.id === p.id)
+                if (exists) return prev.map(item => item.id === p.id ? p : item)
+                return [p, ...prev]
+              })
+            },
+            onDelete: (payload) => {
+              const oldP = payload.old as Partial<Pedido>
+              setPedidos(prev => prev.filter(p => p.id !== oldP.id))
+            }
+          })
+        })
+        .catch(e => setError(e.message))
+        .finally(() => setLoading(false))
+    }
+
+    loadData()
+    window.addEventListener('tenant_changed', loadData)
+
+    return () => {
+      window.removeEventListener('tenant_changed', loadData)
+      if (unsub) unsub()
+    }
+  }, [])
 
   const openPedido = (pedido: Pedido) => {
     setSelectedPedido(pedido)

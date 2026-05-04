@@ -40,7 +40,11 @@ export function BranchSelector() {
         setRestaurantes(list)
         const saved = localStorage.getItem('rg_sucursal')
         const found = list.find(r => r.id === saved) ?? list[0]
-        if (found) setCurrent(found)
+        if (found) {
+          setCurrent(found)
+          if (found.id !== saved) localStorage.setItem('rg_sucursal', found.id)
+          window.dispatchEvent(new Event('tenant_changed'))
+        }
       })
       .catch(() => null)
   }, [])
@@ -55,6 +59,7 @@ export function BranchSelector() {
   const select = (r: Restaurante) => {
     setCurrent(r)
     localStorage.setItem('rg_sucursal', r.id)
+    window.dispatchEvent(new Event('tenant_changed'))
     setOpen(false)
   }
 

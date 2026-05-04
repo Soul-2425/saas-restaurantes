@@ -23,40 +23,50 @@ export default function MesasPage() {
   const [selectedMesa, setSelectedMesa] = useState<Mesa | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // 1. Get current tenant and fetch mesas
+  // Load tenant and data
   useEffect(() => {
-    const rId = localStorage.getItem('rg_sucursal')
-    if (!rId) {
-      setError('No hay sucursal seleccionada. Por favor selecciona una en el menú superior.')
-      setLoading(false)
-      return
+    let unsub: (() => void) | undefined
+
+    const loadData = () => {
+      const rId = localStorage.getItem('rg_sucursal')
+      if (!rId) {
+        setError('No hay sucursal seleccionada. Por favor selecciona una en el menú superior.')
+        setLoading(false)
+        return
+      }
+      
+      setError('')
+      setLoading(true)
+      setRestauranteId(rId)
+
+      fetch(`/api/mesas?restaurante_id=${rId}`)
+        .then(r => r.json())
+        .then(res => {
+          if (res.error) throw new Error(res.error)
+          setMesas(res.data || [])
+          
+          if (unsub) unsub()
+          unsub = subscribeMesas(rId, (payload) => {
+            setMesas(prev => {
+              if (payload.eventType === 'INSERT') return [...prev, payload.new as Mesa]
+              if (payload.eventType === 'DELETE') return prev.filter(m => m.id !== payload.old.id)
+              const updated = payload.new as Mesa
+              return prev.map(m => m.id === updated.id ? updated : m)
+            })
+          })
+        })
+        .catch(e => setError(e.message))
+        .finally(() => setLoading(false))
     }
-    setRestauranteId(rId)
 
-    fetch(`/api/mesas?restaurante_id=${rId}`)
-      .then(r => r.json())
-      .then(res => {
-        if (res.error) throw new Error(res.error)
-        // Filter local to current tenant just in case, though API should filter it
-        setMesas(res.data?.filter((m: Mesa) => m.restaurante_id === rId) || [])
-      })
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false))
+    loadData()
+    window.addEventListener('tenant_changed', loadData)
+
+    return () => {
+      window.removeEventListener('tenant_changed', loadData)
+      if (unsub) unsub()
+    }
   }, [])
-
-  // 2. Setup Realtime subscription
-  useEffect(() => {
-    if (!restauranteId) return
-
-    const unsub = subscribeMesas(restauranteId, (payload) => {
-      setMesas(prev => {
-        const updated = payload.new as Mesa
-        return prev.map(m => m.id === updated.id ? updated : m)
-      })
-    })
-
-    return () => { unsub() }
-  }, [restauranteId])
 
   const openMesa = (mesa: Mesa) => {
     setSelectedMesa(mesa)
