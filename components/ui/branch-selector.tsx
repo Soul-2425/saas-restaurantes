@@ -63,7 +63,32 @@ export function BranchSelector() {
     setOpen(false)
   }
 
-  if (!current) return null
+  if (!current) {
+    if (restaurantes.length === 0) {
+      return (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '0.5rem',
+          background: 'var(--surface-1)', border: '1px solid var(--border)',
+          borderRadius: 'var(--r-md)', padding: '0.45rem 0.75rem',
+          color: 'var(--text-3)', minWidth: 200, opacity: 0.7
+        }}>
+          <div style={{
+            width: 28, height: 28, borderRadius: 'var(--r-xs)',
+            background: 'var(--surface-3)', border: '1px solid var(--border)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <Store size={13} style={{ color: 'var(--text-3)' }} />
+          </div>
+          <div style={{ flex: 1, textAlign: 'left' }}>
+            <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-2)', lineHeight: 1.2 }}>
+              Sin sucursales
+            </p>
+          </div>
+        </div>
+      )
+    }
+    return null
+  }
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>
