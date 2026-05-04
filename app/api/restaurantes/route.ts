@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiError, getAuthUser } from '@/lib/api'
 import { CreateRestauranteSchema } from '@/lib/validators'
 import { ZodError } from 'zod'
+import { createAdminClient } from '@/lib/supabase/server'
 
 // GET /api/restaurantes — Lista todos los restaurantes del usuario autenticado
 export async function GET() {
@@ -30,13 +31,15 @@ export async function GET() {
 // POST /api/restaurantes — Crea un nuevo restaurante y asigna al creador como dueño
 export async function POST(request: NextRequest) {
   try {
-    const { user, supabase } = await getAuthUser()
+    const { user } = await getAuthUser()
     if (!user) return apiError('No autenticado', 401)
 
     const body = await request.json()
     const validated = CreateRestauranteSchema.parse(body)
 
-    const { data: restaurante, error: rError } = await supabase
+    const adminClient = await createAdminClient()
+
+    const { data: restaurante, error: rError } = await adminClient
       .from('restaurantes')
       .insert(validated)
       .select()
@@ -45,14 +48,9 @@ export async function POST(request: NextRequest) {
     if (rError) return apiError(rError.message, 500)
 
     // Asignar creador como dueño
-    await supabase
+    await adminClient
       .from('usuarios_restaurantes')
       .insert({ usuario_id: user.id, restaurante_id: restaurante.id, rol: 'dueño' })
-
-    // Crear configuración por defecto
-    await supabase
-      .from('configuracion_restaurante')
-      .insert({ restaurante_id: restaurante.id, monedas_aceptadas: ['USD'], moneda_base: 'USD' })
 
     return apiSuccess(restaurante, undefined, 201)
   } catch (err) {

@@ -66,25 +66,42 @@ export function BranchSelector() {
   if (!current) {
     if (restaurantes.length === 0) {
       return (
-        <div style={{
+        <button 
+          onClick={async () => {
+            const nombre = window.prompt('Ingresa el nombre de tu nuevo Local / Sucursal:')
+            if (!nombre) return
+            try {
+              const res = await fetch('/api/restaurantes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre })
+              })
+              if (res.ok) {
+                const { data } = await res.json()
+                if (data?.id) {
+                  localStorage.setItem('rg_sucursal', data.id)
+                  window.location.reload()
+                }
+              } else {
+                window.alert('Error al crear el local. Revisa tu conexión.')
+              }
+            } catch (err) {
+              window.alert('Error al crear el local.')
+            }
+          }}
+          className="btn"
+          style={{
           display: 'flex', alignItems: 'center', gap: '0.5rem',
-          background: 'var(--surface-1)', border: '1px solid var(--border)',
+          background: 'var(--red)', border: '1px solid var(--red-border)',
           borderRadius: 'var(--r-md)', padding: '0.45rem 0.75rem',
-          color: 'var(--text-3)', minWidth: 200, opacity: 0.7
+          color: '#fff', minWidth: 200, cursor: 'pointer', transition: 'all 0.2s'
         }}>
-          <div style={{
-            width: 28, height: 28, borderRadius: 'var(--r-xs)',
-            background: 'var(--surface-3)', border: '1px solid var(--border)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-          }}>
-            <Store size={13} style={{ color: 'var(--text-3)' }} />
-          </div>
           <div style={{ flex: 1, textAlign: 'left' }}>
-            <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-2)', lineHeight: 1.2 }}>
-              Sin sucursales
+            <p style={{ fontSize: '0.8rem', fontWeight: 600, lineHeight: 1.2 }}>
+              + Crear mi primer Local
             </p>
           </div>
-        </div>
+        </button>
       )
     }
     return null
