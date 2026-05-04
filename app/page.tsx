@@ -1,65 +1,103 @@
-import Image from "next/image";
+'use client'
+
+import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
+import { ParticleBackground } from '@/components/ui/particle-bg'
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
+      <ParticleBackground />
+
+      {/* Deep gradient overlay */}
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 1,
+        background: 'radial-gradient(circle at 50% 40%, rgba(18,0,5,0.6) 0%, rgba(9,9,9,0.95) 100%)',
+        pointerEvents: 'none',
+      }} />
+
+      {/* Navigation / Header */}
+      <header style={{
+        position: 'relative', zIndex: 10,
+        padding: '1.5rem 3rem',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 10,
+            background: 'linear-gradient(135deg, var(--red), var(--red-dim))',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 0 20px rgba(232,0,42,0.3)',
+          }}>
+            <span style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, color: '#fff', fontSize: '1.1rem' }}>R</span>
+          </div>
+          <span style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 700, color: 'var(--text-1)', fontSize: '1.25rem', letterSpacing: '0.02em' }}>
+            The Rose Group
+          </span>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div>
+          <Link href="/login" className="btn btn-ghost" style={{ fontSize: '0.9rem' }}>
+            Iniciar sesión
+          </Link>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main style={{
+        flex: 1, position: 'relative', zIndex: 10,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        padding: '2rem', textAlign: 'center',
+      }}>
+        <div className="animate-fade-up" style={{ maxWidth: 800, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+            padding: '0.4rem 1rem', borderRadius: 99,
+            background: 'var(--surface-2)', border: '1px solid var(--border)',
+            marginBottom: '2rem',
+          }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--gold)' }} />
+            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-2)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+              SaaS Restaurantes & Bares
+            </span>
+          </div>
+
+          <h1 style={{
+            fontFamily: "'Outfit', sans-serif", fontWeight: 800,
+            fontSize: 'clamp(3rem, 6vw, 4.5rem)', color: 'var(--text-1)', lineHeight: 1.1,
+            marginBottom: '1.5rem',
+          }}>
+            Precisión operativa para la <br />
+            <span style={{ color: 'var(--red-light)', textShadow: '0 0 40px rgba(232,0,42,0.3)' }}>alta gastronomía</span>
+          </h1>
+
+          <p style={{
+            color: 'var(--text-2)', fontSize: 'clamp(1rem, 1.5vw, 1.15rem)', lineHeight: 1.6,
+            maxWidth: 600, marginBottom: '3rem'
+          }}>
+            El sistema multi-sucursal diseñado para gestionar mesas, pedidos en tiempo real y finanzas exactas sin errores de redondeo. Todo en una interfaz de alto rendimiento.
+          </p>
+
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <Link href="/register" className="btn btn-red" style={{ padding: '0 2rem', height: 50, fontSize: '1rem' }}>
+              Comenzar ahora
+            </Link>
+            <Link href="/login" className="btn btn-ghost" style={{ padding: '0 2rem', height: 50, fontSize: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              Ingresar al sistema <ArrowRight size={18} />
+            </Link>
+          </div>
         </div>
       </main>
+
+      {/* Footer minimalista */}
+      <footer style={{
+        position: 'relative', zIndex: 10,
+        padding: '2rem', textAlign: 'center', borderTop: '1px solid var(--border)',
+        background: 'rgba(9,9,9,0.5)', backdropFilter: 'blur(10px)'
+      }}>
+        <p style={{ color: 'var(--text-3)', fontSize: '0.8rem' }}>
+          © {new Date().getFullYear()} The Rose Group. Todos los derechos reservados.
+        </p>
+      </footer>
     </div>
-  );
+  )
 }

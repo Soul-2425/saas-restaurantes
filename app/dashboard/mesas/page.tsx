@@ -33,7 +33,7 @@ export default function MesasPage() {
     }
     setRestauranteId(rId)
 
-    fetch('/api/mesas')
+    fetch(`/api/mesas?restaurante_id=${rId}`)
       .then(r => r.json())
       .then(res => {
         if (res.error) throw new Error(res.error)

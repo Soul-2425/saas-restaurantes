@@ -34,7 +34,7 @@ export default function PedidosPage() {
     }
     setRestauranteId(rId)
 
-    fetch('/api/pedidos')
+    fetch(`/api/pedidos?restaurante_id=${rId}`)
       .then(r => r.json())
       .then(res => {
         if (res.error) throw new Error(res.error)
