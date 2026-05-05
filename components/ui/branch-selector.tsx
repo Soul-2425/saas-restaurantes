@@ -70,11 +70,12 @@ export function BranchSelector() {
           onClick={async () => {
             const nombre = window.prompt('Ingresa el nombre de tu nuevo Local / Sucursal:')
             if (!nombre) return
+            const slug = nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
             try {
               const res = await fetch('/api/restaurantes', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nombre })
+                body: JSON.stringify({ nombre, slug })
               })
               if (res.ok) {
                 const { data } = await res.json()
