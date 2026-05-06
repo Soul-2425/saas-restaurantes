@@ -84,7 +84,8 @@ export function BranchSelector() {
                   window.location.reload()
                 }
               } else {
-                window.alert('Error al crear el local. Revisa tu conexión.')
+                const errData = await res.json().catch(() => null)
+                window.alert(`Error al crear el local: ${errData?.error || 'Revisa tu conexión'}`)
               }
             } catch (err) {
               window.alert('Error al crear el local.')

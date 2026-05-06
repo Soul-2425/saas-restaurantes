@@ -47,10 +47,15 @@ export async function POST(request: NextRequest) {
 
     if (rError) return apiError(rError.message, 500)
 
+    // Ensure user exists in public.usuarios just in case
+    await adminClient.from('usuarios').upsert({ id: user.id, email: user.email }, { onConflict: 'id' })
+
     // Asignar creador como dueño
-    await adminClient
+    const { error: bridgeError } = await adminClient
       .from('usuarios_restaurantes')
       .insert({ usuario_id: user.id, restaurante_id: restaurante.id, rol: 'dueño' })
+      
+    if (bridgeError) return apiError(bridgeError.message, 500)
 
     return apiSuccess(restaurante, undefined, 201)
   } catch (err) {
