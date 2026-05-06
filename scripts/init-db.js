@@ -134,6 +134,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Función para verificar si un usuario es dueño de un restaurante
+CREATE OR REPLACE FUNCTION public.is_tenant_owner(r_id UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM public.usuarios_restaurantes
+        WHERE restaurante_id = r_id
+        AND usuario_id = auth.uid()
+        AND rol = 'dueño'
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- POLÍTICAS RLS
 
 -- Restaurantes: Usuarios solo ven restaurantes donde trabajan
@@ -170,7 +183,7 @@ CREATE POLICY "Self_Access_Usuarios" ON usuarios
 CREATE POLICY "Tenant_Access_Bridge" ON usuarios_restaurantes
     FOR ALL USING (
         usuario_id = auth.uid() OR 
-        restaurante_id IN (SELECT restaurante_id FROM usuarios_restaurantes WHERE usuario_id = auth.uid() AND rol = 'dueño')
+        public.is_tenant_owner(restaurante_id)
     );
 `;
 
