@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from './supabase/server'
+import { createClient, createAdminClient } from './supabase/server'
 
 // ─── Tipo estándar de respuesta de API ─────────────────────────────────────
 export type ApiResponse<T = unknown> = {
@@ -38,7 +38,7 @@ export async function verifyTenantAccess(
   userId: string,
   roles?: Array<'dueño' | 'supervisor' | 'empleado'>
 ) {
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
   const { data, error } = await supabase
     .from('usuarios_restaurantes')
     .select('rol')
@@ -46,7 +46,10 @@ export async function verifyTenantAccess(
     .eq('restaurante_id', restauranteId)
     .single()
 
-  if (error || !data) return { allowed: false, rol: null }
+  if (error || !data) {
+    console.error('verifyTenantAccess FAILED:', { userId, restauranteId, error })
+    return { allowed: false, rol: null }
+  }
   if (roles && !roles.includes(data.rol as 'dueño' | 'supervisor' | 'empleado')) {
     return { allowed: false, rol: data.rol as string }
   }
