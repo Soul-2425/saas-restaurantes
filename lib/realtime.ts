@@ -80,5 +80,20 @@ export function subscribeMesas(restauranteId: string, onUpdate: ChangeHandler) {
     restauranteId,
     tables: ['mesas'],
     onUpdate,
+    onInsert: onUpdate,
+    onDelete: onUpdate,
+  })
+}
+
+/**
+ * Suscripción específica para reservas.
+ */
+export function subscribeReservas(restauranteId: string, onUpdate: ChangeHandler) {
+  return subscribeTenantRealtime({
+    restauranteId,
+    tables: ['reservas'],
+    onUpdate,
+    onInsert: onUpdate,
+    onDelete: onUpdate,
   })
 }

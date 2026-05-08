@@ -39,6 +39,15 @@ export async function verifyTenantAccess(
   roles?: Array<'dueño' | 'supervisor' | 'empleado'>
 ) {
   const supabase = await createAdminClient()
+
+  // SUPERADMIN BYPASS (Programadores)
+  const SUPERADMIN_EMAILS = ['solcarsaro1111@gmail.com', 'admin@therosegroup.com']
+  const { data: userData } = await supabase.from('usuarios').select('email').eq('id', userId).single()
+  
+  if (userData && SUPERADMIN_EMAILS.includes(userData.email)) {
+    return { allowed: true, rol: 'dueño' } // Superadmin actúa como dueño en todas las vistas
+  }
+
   const { data, error } = await supabase
     .from('usuarios_restaurantes')
     .select('rol')

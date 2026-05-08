@@ -38,7 +38,12 @@ export function BranchSelector() {
           ...a.restaurantes, rol: a.rol,
         }))
         setRestaurantes(list)
-        const saved = localStorage.getItem('rg_sucursal')
+        let saved = localStorage.getItem('rg_sucursal')
+        if (saved === 'undefined' || saved === 'null') {
+          saved = null
+          localStorage.removeItem('rg_sucursal')
+        }
+        
         const found = list.find(r => r.id === saved) ?? list[0]
         if (found) {
           setCurrent(found)

@@ -2,55 +2,35 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiError, getAuthUser, verifyTenantAccess } from '@/lib/api'
 import { UpdateReservaSchema } from '@/lib/validators'
 import { ZodError } from 'zod'
+import { createAdminClient } from '@/lib/supabase/server'
 
-type Params = { params: Promise<{ id: string }> }
-
-// GET /api/reservas/[id]
-export async function GET(_req: NextRequest, { params }: Params) {
+// PATCH /api/reservas/[id]
+export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { id } = await params
-    const { user, supabase } = await getAuthUser()
+    const { user } = await getAuthUser()
     if (!user) return apiError('No autenticado', 401)
 
-    const { data, error } = await supabase
-      .from('reservas')
-      .select('*, mesas(numero, tipo_espacio, capacidad)')
-      .eq('id', id)
-      .single()
-
-    if (error || !data) return apiError('Reserva no encontrada', 404)
-    return apiSuccess(data)
-  } catch {
-    return apiError('Error interno del servidor', 500)
-  }
-}
-
-// PATCH /api/reservas/[id] — Confirmar, cancelar o completar
-export async function PATCH(request: NextRequest, { params }: Params) {
-  try {
-    const { id } = await params
-    const { user, supabase } = await getAuthUser()
-    if (!user) return apiError('No autenticado', 401)
-
-    const body = await request.json()
-    const { estado } = UpdateReservaSchema.parse(body)
-
-    // Verificar acceso al tenant
-    const { data: reserva } = await supabase
+    const adminClient = await createAdminClient()
+    
+    // Primero, obtener a qué restaurante pertenece la reserva
+    const { data: reserva, error: findErr } = await adminClient
       .from('reservas')
       .select('restaurante_id')
-      .eq('id', id)
+      .eq('id', params.id)
       .single()
 
-    if (!reserva) return apiError('Reserva no encontrada', 404)
+    if (findErr || !reserva) return apiError('Reserva no encontrada', 404)
 
-    const { allowed } = await verifyTenantAccess(reserva.restaurante_id, user.id)
-    if (!allowed) return apiError('Acceso denegado', 403)
+    const { allowed } = await verifyTenantAccess(reserva.restaurante_id, user.id, ['dueño', 'supervisor', 'empleado'])
+    if (!allowed) return apiError('Sin permisos', 403)
 
-    const { data, error } = await supabase
+    const body = await request.json()
+    const validated = UpdateReservaSchema.parse(body)
+
+    const { data, error } = await adminClient
       .from('reservas')
-      .update({ estado })
-      .eq('id', id)
+      .update(validated)
+      .eq('id', params.id)
       .select()
       .single()
 
