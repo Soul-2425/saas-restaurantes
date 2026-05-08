@@ -45,8 +45,8 @@ export default function ReservasPage() {
 
   const loadData = () => {
     const rId = localStorage.getItem('rg_sucursal')
-    if (!rId) {
-      setError('No tienes ninguna sucursal seleccionada.')
+    if (!rId || rId === 'undefined' || rId === 'null') {
+      setError('No tienes ninguna sucursal seleccionada o tu cuenta no tiene locales.')
       setLoading(false)
       return
     }

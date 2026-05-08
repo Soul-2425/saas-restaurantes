@@ -30,7 +30,7 @@ export default function PedidosPage() {
 
     const loadData = () => {
       const rId = localStorage.getItem('rg_sucursal')
-      if (!rId) {
+      if (!rId || rId === 'undefined' || rId === 'null') {
         setError('No tienes ninguna sucursal seleccionada o tu cuenta no tiene locales. Si tu cuenta es nueva, regístrate de nuevo e ingresa el "Nombre del Local".')
         setLoading(false)
         return
