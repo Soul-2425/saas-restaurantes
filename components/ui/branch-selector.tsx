@@ -30,7 +30,7 @@ export function BranchSelector() {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    fetch('/api/auth/me')
+    fetch('/api/auth/me', { cache: 'no-store' })
       .then(r => r.json())
       .then(({ data }) => {
         if (!data?.accesos) return
@@ -68,34 +68,36 @@ export function BranchSelector() {
     setOpen(false)
   }
 
+  const handleCreate = async () => {
+    const nombre = window.prompt('Ingresa el nombre de tu nuevo Local / Sucursal:')
+    if (!nombre) return
+    const slug = nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
+    try {
+      const res = await fetch('/api/restaurantes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, slug })
+      })
+      if (res.ok) {
+        const { data } = await res.json()
+        if (data?.id) {
+          localStorage.setItem('rg_sucursal', data.id)
+          window.location.reload()
+        }
+      } else {
+        const errData = await res.json().catch(() => null)
+        window.alert(`Error al crear el local: ${errData?.error || 'Revisa tu conexión'}`)
+      }
+    } catch (err) {
+      window.alert('Error al crear el local.')
+    }
+  }
+
   if (!current) {
     if (restaurantes.length === 0) {
       return (
         <button 
-          onClick={async () => {
-            const nombre = window.prompt('Ingresa el nombre de tu nuevo Local / Sucursal:')
-            if (!nombre) return
-            const slug = nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
-            try {
-              const res = await fetch('/api/restaurantes', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nombre, slug })
-              })
-              if (res.ok) {
-                const { data } = await res.json()
-                if (data?.id) {
-                  localStorage.setItem('rg_sucursal', data.id)
-                  window.location.reload()
-                }
-              } else {
-                const errData = await res.json().catch(() => null)
-                window.alert(`Error al crear el local: ${errData?.error || 'Revisa tu conexión'}`)
-              }
-            } catch (err) {
-              window.alert('Error al crear el local.')
-            }
-          }}
+          onClick={handleCreate}
           className="btn"
           style={{
           display: 'flex', alignItems: 'center', gap: '0.5rem',
@@ -189,6 +191,24 @@ export function BranchSelector() {
               {r.id === current.id && <Check size={14} style={{ color: 'var(--red-light)', flexShrink: 0 }} />}
             </button>
           ))}
+          {/* Create new branch button inside dropdown */}
+          <div style={{ padding: '0.5rem', borderTop: '1px solid var(--border)', marginTop: '0.2rem' }}>
+            <button 
+              onClick={handleCreate}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                width: '100%', padding: '0.55rem 0.75rem',
+                background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left',
+                color: 'var(--red-light)', fontSize: '0.8rem', fontWeight: 500,
+                transition: 'background var(--t-fast)', borderRadius: 'var(--r-xs)',
+              }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--red-glow)'}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
+            >
+              <div style={{ width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</div>
+              Crear nueva sucursal
+            </button>
+          </div>
         </div>
       )}
     </div>
