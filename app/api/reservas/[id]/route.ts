@@ -5,8 +5,9 @@ import { ZodError } from 'zod'
 import { createAdminClient } from '@/lib/supabase/server'
 
 // PATCH /api/reservas/[id]
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const { user } = await getAuthUser()
     if (!user) return apiError('No autenticado', 401)
 
@@ -16,7 +17,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     const { data: reserva, error: findErr } = await adminClient
       .from('reservas')
       .select('restaurante_id')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (findErr || !reserva) return apiError('Reserva no encontrada', 404)
@@ -30,7 +31,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     const { data, error } = await adminClient
       .from('reservas')
       .update(validated)
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single()
 
