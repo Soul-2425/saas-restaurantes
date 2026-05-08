@@ -12,14 +12,9 @@ envFile.split(/\r?\n/).forEach(line => {
 async function run() {
   const client = new Client({ connectionString: SUPABASE_DB_URL, ssl: { rejectUnauthorized: false } });
   await client.connect();
-  const sql = fs.readFileSync('migrate-reservas.sql', 'utf8');
-  try {
-    await client.query(sql);
-    console.log('Migration applied successfully.');
-  } catch(e) {
-    console.error('Migration error:', e.message);
-  } finally {
-    await client.end();
-  }
+  const r = await client.query(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name='reservas' ORDER BY ordinal_position`);
+  console.log('Columnas de reservas:');
+  r.rows.forEach(c => console.log(' -', c.column_name, ':', c.data_type));
+  await client.end();
 }
 run();
